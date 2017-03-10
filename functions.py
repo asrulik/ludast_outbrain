@@ -7,19 +7,19 @@ def score_portion(val_copy):
     final = val_copy[max_rows]
     success = final[final['clicked'] == True]
     score = float(len(success)) / float(len(final))
-    print("PORTION: %.12f" % score)
+    print('PORTION: %.12f' % score)
     return score
 
 
 #scoring function taking in consideration the distance of right ad from 1st position
 def score_map(val_copy):
     val_copy.sort_values(['display_id', 'predict'], inplace=True, ascending=[True, False] )
-    val_copy["seq"] = np.arange(val_copy.shape[0])
+    val_copy['seq'] = np.arange(val_copy.shape[0])
     Y_seq = val_copy[val_copy.clicked == 1].seq.values
     Y_first = val_copy[['display_id', 'seq']].drop_duplicates(subset='display_id', keep='first').seq.values
     Y_ranks = Y_seq - Y_first
     score = np.mean(1.0 / (1.0 + Y_ranks))
-    print("MAP: %.12f" % score)
+    print('MAP: %.12f' % score)
     return score
 
 #get random part of train for fast computing and testing

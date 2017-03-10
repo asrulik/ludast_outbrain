@@ -2,18 +2,18 @@ import numpy as np
 import pandas as p
 import os
 
-path = os.getcwd() + "/"
-path_b = path + "source_tables/built/"
+path = os.getcwd() + '/'
+path_b = path + 'source_tables/built/'
 #load needed tables
 
 #contains the display_ids (page shown to a user) with all the ads on the page and wether they were clicked or not (always one was clicked)
-train = p.read_csv(path_b + "train.csv", dtype={"display_id": int, "ad_id": int, "clicked" : bool})
+train = p.read_csv(path_b + 'train.csv', dtype={'display_id': int, 'ad_id': int, 'clicked' : bool})
 
 #contains the document_id of the display (the webpage visited)
-events = p.read_csv(path_b + "events_prep.csv", usecols = [0,1], dtype={"display_id": int, "document_id" : int})
+events = p.read_csv(path_b + 'events_prep.csv', usecols = [0,1], dtype={'display_id': int, 'document_id' : int})
 
 #contains information about the ads, document_id - the webpage the ad is leading to, campaign_id - the campaign of the ad, advertiser_id - the advertiser of the ad
-promoted_content = p.read_csv(path_b + "promoted_content_prep.csv", usecols = [0,1,2,3] , dtype = {"ad_id":int, "document_id":int, "campaign_id":int, "advertiser_id":int})
+promoted_content = p.read_csv(path_b + 'promoted_content_prep.csv', usecols = [0,1,2,3] , dtype = {'ad_id':int, 'document_id':int, 'campaign_id':int, 'advertiser_id':int})
 
 
 #function for calculating the clicks through rate (clicked percentage) over different features
@@ -22,7 +22,7 @@ def ctr(df, over, name):
     #'over' are the features we get CTR on (can be a single feature or a couple)
 
     #name of the feature
-    name = "score_" + name
+    name = 'score_' + name
 
     #columns to be dropped later on
     to_drop1 = ['ads_on_doc','clicked','uni_chance','clicked_percent','clicked_percent_normalized','likelihood_normalized']
@@ -126,4 +126,4 @@ document_on_campaign_ctr = ctr(document_on_campaign_ctr, ['document_id', 'campai
 document_on_campaign_ctr.to_csv(path_b + 'document_on_campaign_ctr.csv', index = False)
 
 
-print "ctr tables created in path/source_tables/built/ directory"
+print 'ctr tables created in path/source_tables/built/ directory'

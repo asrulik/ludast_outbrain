@@ -19,11 +19,11 @@ if shapely_f:
     import shapely
 
 
-path = os.getcwd() + "/"
-path_b = path + "source_tables/built/"
+path = os.getcwd() + '/'
+path_b = path + 'source_tables/built/'
 
 
-events = p.read_csv(path_b + "events.csv", usecols = [0,2,4], dtype={"display_id": int, "timestamp" : int, "geo_location" : str})
+events = p.read_csv(path_b + 'events.csv', usecols = [0,2,4], dtype={'display_id': int, 'timestamp' : int, 'geo_location' : str})
 
 
 #functions for parsing the abbreviations from the geo_location
@@ -105,21 +105,20 @@ total_len = country_state_combos.shape[0]
 for i, row in enumerate(country_state_combos.itertuples()):
     nulled = 0
     if nan_check(row.state):
-        state = ''
+        place = row.country
     else:
-        state = row.state
-
+        place = row.country + ' ' + row.state
     #get the location details
     set = 0
     while(set == 0):
         try:
-            location = gn.geocode(row.country + ' ' + state)
-            set = 1
+            location = gn.geocode(place)
             if location == None:
-                location = gn.geocode(row.country)
+                place = row.country
+                location = gn.geocode(place)
                 if location == None:
                     nulled = 1
-                    continue
+            set = 1
         except:
             time.sleep(5)
     if nulled == 1:
@@ -130,7 +129,17 @@ for i, row in enumerate(country_state_combos.itertuples()):
     else:
         timezone_str = tz.tzNameAt(location.latitude, location.longitude)
     if timezone_str == None:
-        location = gn.geocode(row.country)
+        set = 0
+        while(set == 0):
+            try:
+                location = gn.geocode(row.country)
+                if location == None:
+                    nulled = 1
+                set = 1
+            except:
+                time.sleep(5)
+        if nulled == 1:
+            continue
         if shapely_f:
             timezone_str = tz.tzNameAt(location.latitude, location.longitude, forceTZ=True)
         else:
@@ -146,7 +155,6 @@ for i, row in enumerate(country_state_combos.itertuples()):
     #set the offset in the table
     country_state_combos.set_value(i, 'offset', pyt.utcoffset().total_seconds())
 
-
 #the only nulls, added manualy
 country_state_combos = country_state_combos.set_value(99, 'offset', -10*60*60)
 country_state_combos = country_state_combos.set_value(197, 'offset', 60*60)
@@ -157,6 +165,8 @@ country_state_combos = country_state_combos.set_value(362, 'offset', 9*60*60)
 country_state_combos = country_state_combos.set_value(636, 'offset', -4*60*60)
 
 
+#if shapely_f = 1 than there are more nulls, fill with offset 0
+country_state_combos = country_state_combos.fillna(0)
 
 
 events_parsing = events_parsing.merge(country_state_combos, how='left', on = ['country','state']).drop(events_parsing.columns[[2,3,4]], axis=1)
@@ -179,18 +189,18 @@ events.loc[events['timestamp'] < 0, 'timestamp'] = events['timestamp'] + 1000*60
 
 
 #converting timestamp field to hour and day
-events["hour"] = (events.timestamp // (3600 * 1000)) % 24
-events["day"] = events.timestamp // (3600 * 24 * 1000)
+events['hour'] = (events.timestamp // (3600 * 1000)) % 24
+events['day'] = events.timestamp // (3600 * 24 * 1000)
 
 
 #adding weekend column
 #diving day hours to 4 sections to combine results of adjacent hours
-events["weekend"] = events["morning"] = events["noon"] = events["evening"] = events["night"] = 0
+events['weekend'] = events['morning'] = events['noon'] = events['evening'] = events['night'] = 0
 events.ix[events['day'].isin([4, 5, 11, 12]), 'weekend'] = 1
-events.ix[(events["hour"] < 6) | (events["hour"] > 23), "night"] = 1
-events.ix[(events["hour"] >= 6) & (events["hour"] < 12), "morning"] = 1
-events.ix[(events["hour"] >= 12) & (events["hour"] < 18), "noon"] = 1
-events.ix[(events["hour"] >= 18) & (events["hour"] <= 23), "evening"] = 1
+events.ix[(events['hour'] < 6) | (events['hour'] > 23), 'night'] = 1
+events.ix[(events['hour'] >= 6) & (events['hour'] < 12), 'morning'] = 1
+events.ix[(events['hour'] >= 12) & (events['hour'] < 18), 'noon'] = 1
+events.ix[(events['hour'] >= 18) & (events['hour'] <= 23), 'evening'] = 1
 
 
 events.drop(['timestamp', 'hour', 'day','offset'], axis=1, inplace=True)
@@ -199,4 +209,4 @@ events.drop(['timestamp', 'hour', 'day','offset'], axis=1, inplace=True)
 events.to_csv(path_b + 'time_table.csv', index = False)
 
 
-print "time_table.csv created in path/source_tables/built/ directory"
+print 'time_table.csv created in path/source_tables/built/ directory'
