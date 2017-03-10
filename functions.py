@@ -1,5 +1,12 @@
 import numpy as np
 import pandas as p
+import os
+
+#directory path
+path = os.getcwd() + '/'
+path_t = path + 'source_tables/'
+path_b = path_t + 'built/'
+
 
 #scoring function calculating portion of correct display ids predictions
 def score_portion(val_copy):
@@ -67,4 +74,62 @@ def correlations(train, test, top_dict, cat_dict):
         dictionary, id_ad, id_doc, confi_ad, confi_doc, corel = cat_dict, 'category_id_ad', 'category_id_doc', 'confi_cat_ad', 'confi_cat_doc', 'cor_cat'
     return train, test
 
+def merge_ctrs_and_time(train, test):
+    
+    #load each of the CTR and time tables, merge with train and test and delete the pre-merged feature table
+    
+    #AD_ID CTR
+    ad_ctr = p.read_csv(path_b + 'ad_ctr.csv', dtype={'ad_id':int, 'score':float})
+    train = train.merge(ad_ctr, how = 'left', on = 'ad_id')
+    test = test.merge(ad_ctr, how = 'left', on = 'ad_id')
+    del ad_ctr
+    
+    #AD_IDS' - DOCUMENT CTR
+    ad_document_ctr = p.read_csv(path_b + 'ad_document_ctr.csv', dtype={'ad_document_id':int, 'score':float})
+    train = train.merge(ad_document_ctr, how = 'left', on = 'ad_document_id')
+    test = test.merge(ad_document_ctr, how = 'left', on = 'ad_document_id')
+    del ad_document_ctr
+    
+    #ADVERTISER_ID CTR
+    advertiser_ctr = p.read_csv(path_b + 'advertiser_ctr.csv', dtype={'advertiser_id':int, 'score':float})
+    train = train.merge(advertiser_ctr, how = 'left', on = 'advertiser_id')
+    test = test.merge(advertiser_ctr, how = 'left', on = 'advertiser_id')
+    del advertiser_ctr
 
+    #CAMPAIGN_ID CTR
+    campaign_ctr = p.read_csv(path_b + 'campaign_ctr.csv', dtype={'campaign_id':int, 'score':float})
+    train = train.merge(campaign_ctr, how = 'left', on = 'campaign_id')
+    test = test.merge(campaign_ctr, how = 'left', on = 'campaign_id')
+    del campaign_ctr
+    
+    #DOCUMENT_ID of DISPLAY on AD_ID CTR
+    document_on_ad_ctr = p.read_csv(path_b + 'document_on_ad_ctr.csv', dtype={'document_id':int, 'ad_id':int, 'score':float})
+    train = train.merge(document_on_ad_ctr, how = 'left', on = ['document_id', 'ad_id'])
+    test = test.merge(document_on_ad_ctr, how = 'left', on = ['document_id', 'ad_id'])
+    del document_on_ad_ctr
+    
+    #DOCUMENT_ID of DISPLAY on AD_IDS' DOCUMENT CTR
+    document_on_ad_document_ctr = p.read_csv(path_b + 'document_on_ad_document_ctr.csv', dtype={'document_id':int, 'ad_document_id':int, 'score':float})
+    train = train.merge(document_on_ad_document_ctr, how = 'left', on = ['document_id', 'ad_document_id'])
+    test = test.merge(document_on_ad_document_ctr, how = 'left', on = ['document_id', 'ad_document_id'])
+    del document_on_ad_document_ctr
+    
+    #DOCUMENT_ID of DISPLAY on ADVERTISER_ID CTR
+    document_on_advertiser_ctr = p.read_csv(path_b + 'document_on_advertiser_ctr.csv', dtype={'document_id':int, 'advertiser_id':int, 'score':float})
+    train = train.merge(document_on_advertiser_ctr, how = 'left', on = ['document_id', 'advertiser_id'])
+    test = test.merge(document_on_advertiser_ctr, how = 'left', on = ['document_id', 'advertiser_id'])
+    del document_on_advertiser_ctr
+    
+    #DOCUMENT_ID of DISPLAY on CAMPAIGN_ID CTR
+    document_on_campaign_ctr = p.read_csv(path_b + 'document_on_campaign_ctr.csv', dtype={'document_id':int, 'campaign_id':int, 'score':float})
+    train = train.merge(document_on_campaign_ctr, how = 'left', on = ['document_id', 'campaign_id'])
+    test = test.merge(document_on_campaign_ctr, how = 'left', on = ['document_id', 'campaign_id'])
+    del document_on_campaign_ctr
+    
+    #TIME TABLE OF WHEN DID THE DISPLAY OCCUR (TIME OF DAY AND MIDWEEK/WEEKEND)
+    time_table = p.read_csv(path_b + 'time_table.csv', dtype={'display_id':int, 'weekend':int, 'morning':int, 'noon':int, 'evening':int, 'night':int})
+    train = train.merge(time_table, how = 'left', on = 'display_id')
+    test = test.merge(time_table, how = 'left', on = 'display_id')
+    del time_table
+    
+    return train, test
